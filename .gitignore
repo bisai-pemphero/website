@@ -1,1 +1,55 @@
-Nothing should be ignored since the changes only include source code files (.kt files) and no build artifacts, dependencies, or temporary files.
+```
+# Compiled and build artifacts
+*.class
+*.o
+*.obj
+*.out
+*.so
+*.a
+*.dll
+*.exe
+build/
+dist/
+
+# Dependencies
+.gradle/
+target/
+__pycache__/
+.mypy_cache/
+.pytest_cache/
+coverage/
+htmlcov/
+*.coverage
+
+# Android specific
+*.apk
+*.aar
+*.dex
+local.properties
+.gradle/
+build/
+app/build/
+*.iml
+.idea/
+
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
+.env.*
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# System
+.DS_Store
+Thumbs.db
+```
