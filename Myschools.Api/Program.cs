@@ -70,7 +70,11 @@ internal class Program
 				ClockSkew = TimeSpan.FromMinutes(1.0)
 			};
 		});
-		builder.Services.AddAuthorization();
+		builder.Services.AddAuthorization(delegate(Microsoft.AspNetCore.Authorization.AuthorizationOptions options)
+		{
+			// SystemAdmin can create users across all schools
+			options.AddPolicy("CanCreateUsers", policy => policy.RequireRole("SystemAdmin"));
+		});
 		WebApplication app = builder.Build();
 		await app.Services.GetRequiredService<SqlDatabase>().EnsurePasswordResetTokensTableAsync();
 		await app.Services.GetRequiredService<SqlDatabase>().EnsureFailedLoginAttemptsTableAsync();
