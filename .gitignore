@@ -1,42 +1,18 @@
 ```
-# Kotlin/Android build artifacts
-*.class
-*.jar
-*.war
-*.aar
-*.apk
-*.dex
-
 # Gradle
 .gradle/
 build/
-app/build/
+!gradle.properties
+!gradlew
+!gradlew.bat
 
 # Android
+*.apk
+*.aar
 *.ap_
-*.aab
-*.so
-
-# Dependencies
-.libs/
-lib/
-
-# IDE
-.idea/
-*.iml
-*.ipr
-*.iws
-.vscode/
-
-# Temporary files
-*.tmp
-*.temp
-*.log
-
-# System files
-.DS_Store
-Thumbs.db
-
-# Local configuration
 local.properties
+captures/
+.externalNativeBuild
+.intermediates
+.profile
 ```
