@@ -1,0 +1,417 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Data;
+using System.Data.SqlClient;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.Mail;
+using System.Runtime.InteropServices.WindowsRuntime;
+using System.Security.Cryptography;
+using System.Text;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Xml.Linq;
+using Encoder = System.Drawing.Imaging.Encoder;
+
+public partial class InvoiceGenerate : System.Web.UI.Page
+{
+    string appconStr;
+    string server, appdb, user, password, version;
+    SqlConnection appconSQL2;
+
+    private void readConf()
+    {
+        System.IO.StreamReader sr;
+        {
+            sr = System.IO.File.OpenText(Server.MapPath("../dbconn.ini"));
+
+
+            string s = "";
+            string[] rfInfo = new string[2];
+            char SplitChar = '=';
+            while ((s = sr.ReadLine()) != null)
+            {
+                if (!(s.Trim() == "") || s.StartsWith("#"))
+                {
+                    rfInfo = s.Split(SplitChar);
+                    switch (rfInfo[0].Trim().ToLower())
+                    {
+                        case "server":
+                            server = rfInfo[1].Trim();
+                            break;
+                        case "user":
+                            user = rfInfo[1].Trim();
+                            break;
+                        case "password":
+                            password = rfInfo[1].Trim();
+                            break;
+                        case "appdb":
+                            appdb = rfInfo[1].Trim();
+                            break;
+                        case "version":
+                            version = rfInfo[1].Trim();
+                            break;
+
+
+                    }
+                }
+            }
+        }
+    }
+
+    private void dbconnect()
+    {
+        appconStr = "Data Source=" + server + ";user id=" + user + ";password=" + password + ";max pool size= 65536;Initial Catalog=" + appdb + ";";
+        appconSQL2 = new System.Data.SqlClient.SqlConnection(appconStr);
+        appconSQL2.Open();
+
+    }
+
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        readConf();
+        dbconnect();
+
+        if (Session["USER"] != null) lblSession.Text = Session["USER"].ToString();
+        else
+        {
+            this.Response.Redirect("../CommonPages/Login.aspx");
+            return;
+        }
+
+        if (!IsPostBack)
+        {
+            string initial = GetFirstLetters(lblUser.Text.Trim());
+            lblInitials.Text = initial;
+
+            string id = Request.QueryString["Id"];
+            lblInvoiceId.Text = id;
+
+            LoadSchoolDetails(id);
+
+            LoadUsername();
+        }
+    }
+
+    public void LoadUsername()
+    {
+        try
+        {
+            string sql = @"select Fullname from Users where Username = @username";
+            SqlCommand cmd = new SqlCommand(sql, appconSQL2);
+            cmd.Parameters.AddWithValue("@username", lblSession.Text.Trim());
+            SqlDataReader dr = cmd.ExecuteReader();
+            while (dr.Read())
+            {
+                lblUser.Text = dr.GetString(0);
+            }
+            dr.Close();
+            dr.Dispose();
+        }
+        catch (Exception ex)
+        {
+            lblError.Text = "Username error" + ex;
+        }
+        finally
+        {
+            //
+        }
+    }
+
+    public void LoadSchoolDetails(string invoiceId)
+    {
+        try
+        {
+            string sql2 = @"SELECT AL.[School_name], AL.Admin_email, AL.[Admin_name], AL.[School_address],
+            AL.[PhoneNumber], SI.Description, SI.Total, SI.InvoiceNo
+            FROM [AllSchools] as AL Join SchoolInvoice as SI on SI.SchoolId = AL.SchoolId
+            WHERE SI.InvoiceId = @invoiceId";
+            SqlCommand cmd2 = new SqlCommand(sql2, appconSQL2);
+            cmd2.Parameters.AddWithValue("@invoiceId", invoiceId);
+            SqlDataReader dr2 = cmd2.ExecuteReader();
+            while (dr2.Read())
+            {
+                
+                lblSchoolName.Text = dr2.GetString(0);
+                lblSchoolEmail.Text = dr2.GetString(1);
+                lblSchoolAdmin.Text = dr2.GetString(2);
+                lblSchoolAddress.Text = dr2.GetString(3);
+                lblSchoolContact.Text = dr2.GetString(4);
+                txtDescription.Text = dr2.GetString(5);
+                txtTotal.Text = dr2.GetDouble(6).ToString();
+                lblInvoiceNo.Text = dr2.GetString(7);
+            }
+            dr2.Close();
+            dr2.Dispose();
+        }
+        catch (Exception ex)
+        {
+            lblError.Text = "Load School Details Error" + ex;
+        }
+        finally
+        {
+            //
+        }
+    }
+    public static string GetFirstLetters(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+            return string.Empty;
+
+        string[] words = input.Split(' ');
+        StringBuilder result = new StringBuilder();
+
+        foreach (string word in words)
+        {
+            if (word.Length > 0)
+            {
+                result.Append(word[0]);
+            }
+        }
+        return result.ToString();
+    }
+
+   
+
+    protected void btnSave_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            //proceed
+            string sql3 = "select * from SchoolPayments where InvoiceId = @invoiceId ";
+
+            using (SqlCommand cmd3 = new SqlCommand(sql3, appconSQL2))
+            {
+                cmd3.Parameters.AddWithValue("@invoiceId", lblInvoiceId.Text.Trim());
+                SqlDataReader dr3 = cmd3.ExecuteReader();
+                if (dr3.HasRows)
+                {
+
+                    lblError.Text = "This payment already exists! Please check";
+                    ScriptManager.RegisterStartupScript(this, this.GetType(), "ShowToast", "showErrorToast('" + lblError.Text + "');", true);
+                    dr3.Close();
+
+                    return;
+                }
+                dr3.Close();
+            }
+
+            double amount = Convert.ToDouble(txtTotal.Text.Trim());
+
+            string sql4 = @"Insert into [SchoolPayments] ([InvoiceId],[Amount_Paid], [Balance], [PaymentMode], 
+            [Reference], [PaymentDate])
+            VALUES (@invoiceId, @amount, @balance, @mode, @reference, GETDATE())";
+            SqlCommand cmd4 = new SqlCommand(sql4, appconSQL2);
+            cmd4.Parameters.AddWithValue("@invoiceId", lblInvoiceId.Text.Trim());
+            cmd4.Parameters.AddWithValue("@amount", amount);
+            cmd4.Parameters.AddWithValue("@balance", 0);
+            cmd4.Parameters.AddWithValue("@mode", drpPaymentMode.Text.Trim());
+            cmd4.Parameters.AddWithValue("@reference", txtReference.Text.Trim());
+            cmd4.ExecuteNonQuery();
+            cmd4.Dispose();
+                   
+
+            string sql5 = @"Update SchoolInvoice set [Paid] =@paid, [Balance_Due] = @balance 
+            where InvoiceId = @id";
+            SqlCommand cmd5 = new SqlCommand(sql5, appconSQL2);
+            cmd5.Parameters.AddWithValue("@id", lblInvoiceId.Text.Trim());
+            cmd5.Parameters.AddWithValue("@paid", amount);
+            cmd5.Parameters.AddWithValue("@balance", 0);
+            cmd5.ExecuteNonQuery();
+            cmd5.Dispose();
+
+            sendEmail();
+            Reset();
+
+            ScriptManager.RegisterStartupScript(this, GetType(), "ShowSuccessAlert", "showAlert('success', 'Payment Saved Successfully!')", true);
+
+        }
+        catch (Exception ex)
+        {
+            lblError.Text = "Saving error: " + ex.Message;
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "ShowToast", "showErrorToast('" + lblError.Text + "');", true);
+        }
+    }
+
+    public void Reset()
+    {
+        txtDescription.Text = string.Empty;
+        txtTotal.Text = string.Empty;
+        lblError.Text = string.Empty;
+        drpPaymentMode.SelectedIndex = -1;
+        txtReference.Text = string.Empty;
+    }
+
+    public void sendEmail()
+    {
+        string fromMail = "inosoftmw@gmail.com";
+        string fromPassword = "agcgzyefkyrdtmfa";
+        MailMessage message = new MailMessage();
+        message.From = new MailAddress(fromMail);
+
+        message.Subject = "SCHOOL SYSTEM PAYMENT RECEIPT";
+        string mailAddress = lblSchoolEmail.Text.Trim();
+
+        message.To.Add(new MailAddress(mailAddress));
+
+        string client = lblSchoolAdmin.Text.Trim();
+        string School = lblSchoolName.Text.Trim();
+        string address = lblSchoolAddress.Text.Trim();
+        string contact = lblSchoolContact.Text.Trim();
+        string invoiceNo = lblInvoiceNo.Text.Trim();
+        DateTime today = DateTime.Now;
+        string description = txtDescription.Text.Trim();
+        string total = "MWK" + txtTotal.Text.Trim();
+        string emailTo = lblSchoolEmail.Text.Trim();
+
+        string paymentMode = drpPaymentMode.Text.Trim();
+        string reference = txtReference.Text.Trim();
+
+        message.Body = @"
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; line-height: 1.6; margin: 0; padding: 20px; background-color: #f9f9f9; }
+            .invoice-container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+            .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #3498db; padding-bottom: 20px; }
+            .header h1 { color: #2c3e50; margin: 0; font-size: 28px; }
+            .invoice-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        .info-column {
+            flex: 1;
+        }
+        .info-column:first-child {
+            text-align: left;
+        }
+        .info-column:last-child {
+            text-align: right;
+        }
+        .info-item {
+            margin-bottom: 8px;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #2c3e50;
+            display: block;
+            margin-bottom: 3px;
+            font-size: 16px;
+        }
+            .section { margin-bottom: 25px; }
+            .section-title { font-weight: bold; font-size: 18px; color: #2c3e50; border-bottom: 1px solid #eee; padding-bottom: 8px; margin-bottom: 15px; }
+            .offering-item { margin-bottom: 8px; padding-left: 15px; position: relative; }
+            .offering-item:before { content: '-'; position: absolute; left: 0; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
+            th { text-align: left; padding: 12px 15px; border-bottom: 2px solid #3498db; background-color: #f8f9fa; color: #2c3e50; }
+            td { padding: 12px 15px; border-bottom: 1px solid #eee; }
+            tr:last-child td { border-bottom: 2px solid #3498db; }
+            .total-row { font-weight: bold; background-color: #f8f9fa; }
+            .barcode { text-align: center; margin: 30px 0; padding: 20px; background-color: #f8f9fa; border-radius: 8px; border: 1px dashed #ccc; }
+            .barcode-number { font-family: 'Courier New', monospace; font-size: 24px; letter-spacing: 3px; margin: 15px 0; font-weight: bold; }
+            .thank-you { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #3498db; font-style: italic; color: #2c3e50; font-size: 18px; }
+            .contact { text-align: center; margin-top: 15px; font-size: 16px; color: #7f8c8d; }
+            .footer { text-align: center; margin-top: 20px; color: #7f8c8d; font-size: 14px; }
+            .logo { text-align: center; margin-bottom: 20px; }
+            .logo img { max-width: 180px; height: auto; }
+        </style>
+    </head>
+    <body>
+        <div class='invoice-container'>
+            <div class='logo'>
+                <img src='https://apps.innosoftmw.com/myschool/img/logo.png' alt='Innosoft' />
+            </div>
+            
+            <div class='header'>
+                <h1>PAYMENT RECEIPT</h1>
+            </div>
+
+            <div class='invoice-info'>
+                <div class='info-column'>
+                    <div class='info-item'>
+                       
+                    </div>
+                </div>
+                <br/><br/>
+                <div class='info-column'>
+                    <div class='info-item'>
+                        <span class='info-label'>DATED  " + today+ @"</span>                   
+                    </div>
+                </div>
+            </div>
+
+            <div class='section'>
+                <div class='section-title'>Billed to</div>
+                 <div class='offering-item'>" + client+@"<div>
+                <div class='offering-item'>" + address+@"<div>
+                <div class='offering-item'>"+contact+ @"</div>
+                <div class='offering-item'>"+emailTo+ @"</div>
+                <br/>
+                 <div class='offering-item'> Payment Mode: "+paymentMode+ @"</div>
+                <div class='offering-item'> Reference: "+reference+ @"</div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr >
+                        
+                        <th colspan='5'>Description</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan='5'>" + description+@"</td>
+                        <td>"+total+@"</td>
+                 
+                    <tr class='total-row'>
+                        <td colspan='5'>TOTAL</td>
+                        <td>"+total+@"</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class='barcode'>
+               
+                <div class='info-label'> RECEIPT # "+invoiceNo+@"</div>
+            </div>
+
+            <div class='thank-you'>
+                <p>Thank you for making this payment!</p>
+            </div>
+
+            <div class='contact'>
+                <p>If you have questions about your order, you can email us at pempherobisai@gmail.com.</p>
+            </div>
+            
+            <div class='footer'>
+                <p>Receipt For School System v2.0 | Generated on "+today+@"</p>
+            </div>
+        </div>
+    </body>
+    </html>";
+
+        message.IsBodyHtml = true;
+
+        var smtpClient = new SmtpClient("smtp.gmail.com")
+        {
+            Port = 587,
+            Credentials = new NetworkCredential(fromMail, fromPassword),
+            EnableSsl = true,
+        };
+
+        smtpClient.Send(message);
+    }
+
+    protected void btnBack_Click(object sender, EventArgs e)
+    {
+        Response.Redirect("Invoice.aspx");
+    }
+}
