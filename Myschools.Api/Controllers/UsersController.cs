@@ -17,11 +17,24 @@ namespace Myschools.Api.Controllers;
 [Route("api/users")]
 public sealed class UsersController(SqlDatabase database, LegacyPasswordCipher passwordCipher) : ControllerBase
 {
-	[HttpGet]
-	public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
-	{
-		return Ok(await database.QueryAsync("SELECT U.UserId, U.Username, U.Fullname, R.RoleName, AL.School_name AS SchoolName FROM Users U JOIN AllSchools AL ON U.SchoolId = AL.SchoolId JOIN Roles R ON R.RoleId = U.RoleId", cancellationToken));
-	}
+		[HttpGet]
+		public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
+		{
+			// SystemAdmin can see all users, others see only their school's users
+			int roleId = User.GetRoleId();
+			if (roleId == 1) // SystemAdmin
+			{
+				return Ok(await database.QueryAsync("SELECT U.UserId, U.Username, U.Fullname, R.RoleName, AL.School_name AS SchoolName, U.SchoolId, U.RoleId FROM Users U JOIN AllSchools AL ON U.SchoolId = AL.SchoolId JOIN Roles R ON R.RoleId = U.RoleId ORDER BY U.SchoolId, U.Username", cancellationToken));
+			}
+			else
+			{
+				if (!TryGetSchoolId(out var schoolId))
+				{
+					return Unauthorized(new { message = "The authenticated user does not have a valid school." });
+				}
+				return Ok(await database.QueryAsync("SELECT U.UserId, U.Username, U.Fullname, R.RoleName, AL.School_name AS SchoolName, U.SchoolId, U.RoleId FROM Users U JOIN AllSchools AL ON U.SchoolId = AL.SchoolId JOIN Roles R ON R.RoleId = U.RoleId WHERE U.SchoolId = @SchoolId ORDER BY U.Username", cancellationToken, new SqlParameter("@SchoolId", schoolId)));
+			}
+		}
 
 	[HttpGet("me")]
 	public async Task<IActionResult> Me(CancellationToken cancellationToken)

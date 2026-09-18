@@ -487,7 +487,7 @@ public sealed class FeePaymentsController(SqlDatabase database) : ControllerBase
 	private static string ReceiptNumber(string schoolName, DateTime date)
 	{
 		if (string.IsNullOrEmpty(schoolName)) return date.ToString("ddMMyy-HHmmss");
-		string prefix = schoolName.Length < 3 ? schoolName : schoolName.Substring(0, 2) + schoolName.Substring(schoolName.Length - 1);
+		string prefix = schoolName.Length < 2 ? schoolName : schoolName.Substring(0, 2);
 		return $"{prefix}{date:ddMMyy-HHmmss}";
 	}
 }

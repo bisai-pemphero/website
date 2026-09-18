@@ -1,0 +1,4 @@
+#!/bin/sh
+# Gradle wrapper script placeholder
+echo "Gradle wrapper not fully configured. Please run: gradle wrapper"
+exit 1
