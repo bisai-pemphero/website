@@ -7,26 +7,35 @@
 *.apk
 *.dex
 
-# Build directories
-build/
+# Gradle
 .gradle/
-*/build/
-*/.gradle/
+build/
+app/build/
 
-# IDE files
+# Android
+*.ap_
+*.aab
+*.so
+
+# Dependencies
+.libs/
+lib/
+
+# IDE
 .idea/
 *.iml
 *.ipr
 *.iws
 .vscode/
 
-# Temp files
+# Temporary files
 *.tmp
-*.swp
-*~
-
-# Logs
+*.temp
 *.log
+
+# System files
+.DS_Store
+Thumbs.db
 
 # Local configuration
 local.properties

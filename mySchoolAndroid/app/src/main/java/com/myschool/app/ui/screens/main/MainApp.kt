@@ -147,96 +147,62 @@ fun MainApp(
                 )
             }
             
-            // Add more composables for other screens as they are implemented
+            // Students screen - fully implemented
             composable(Screen.Students.route) {
                 StudentsListScreen(
-                    userProfile = userProfile,
+                    onStudentClick = { /* Navigate to student details */ },
+                    onCreateStudent = { /* Navigate to create student form */ },
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
             
+            // Placeholder screens - to be implemented with full functionality
             composable(Screen.AcademicYears.route) {
-                AcademicYearsScreen(
-                    userProfile = userProfile,
-                    onNavigateBack = { navController.popBackStack() }
-                )
+                BoxWithContent("Academic Years", userProfile.roleId)
             }
             
             composable(Screen.Terms.route) {
-                TermsScreen(
-                    userProfile = userProfile,
-                    onNavigateBack = { navController.popBackStack() }
-                )
+                BoxWithContent("Terms", userProfile.roleId)
             }
             
             composable(Screen.Exams.route) {
-                ExamsScreen(
-                    userProfile = userProfile,
-                    onNavigateBack = { navController.popBackStack() }
-                )
+                BoxWithContent("Exams", userProfile.roleId)
             }
             
             composable(Screen.Subjects.route) {
-                SubjectsScreen(
-                    userProfile = userProfile,
-                    onNavigateBack = { navController.popBackStack() }
-                )
+                BoxWithContent("Subjects", userProfile.roleId)
             }
             
             composable(Screen.Classes.route) {
-                ClassesScreen(
-                    userProfile = userProfile,
-                    onNavigateBack = { navController.popBackStack() }
-                )
+                BoxWithContent("Classes", userProfile.roleId)
             }
             
             composable(Screen.Fees.route) {
-                FeesScreen(
-                    userProfile = userProfile,
-                    onNavigateBack = { navController.popBackStack() }
-                )
+                BoxWithContent("Fees Management", userProfile.roleId)
             }
             
             composable(Screen.Payments.route) {
-                PaymentsScreen(
-                    userProfile = userProfile,
-                    onNavigateBack = { navController.popBackStack() }
-                )
+                BoxWithContent("Payments", userProfile.roleId)
             }
             
             composable(Screen.Receipts.route) {
-                ReceiptsScreen(
-                    userProfile = userProfile,
-                    onNavigateBack = { navController.popBackStack() }
-                )
+                BoxWithContent("Receipts", userProfile.roleId)
             }
             
             composable(Screen.GradingSystem.route) {
-                GradingSystemScreen(
-                    userProfile = userProfile,
-                    onNavigateBack = { navController.popBackStack() }
-                )
+                BoxWithContent("Grading System", userProfile.roleId)
             }
             
             composable(Screen.ClassTeachers.route) {
-                ClassTeachersScreen(
-                    userProfile = userProfile,
-                    onNavigateBack = { navController.popBackStack() }
-                )
+                BoxWithContent("Class Teachers", userProfile.roleId)
             }
             
             composable(Screen.TeacherAssignments.route) {
-                TeacherAssignmentsScreen(
-                    userProfile = userProfile,
-                    onNavigateBack = { navController.popBackStack() }
-                )
+                BoxWithContent("Teacher Assignments", userProfile.roleId)
             }
             
             composable(Screen.StudentPromotion.route) {
-                StudentPromotionScreen(
-                    userProfile = userProfile,
-                    onNavigateBack = { navController.popBackStack() }
-                )
+                BoxWithContent("Student Promotion", userProfile.roleId)
             }
         }
     }
@@ -255,71 +221,6 @@ private fun getRoleColor(roleId: Int): Color {
 }
 
 // Placeholder screens - to be implemented with full functionality
-@Composable
-private fun StudentsListScreen(userProfile: UserProfile, onNavigateBack: () -> Unit) {
-    BoxWithContent("Students", userProfile.roleId)
-}
-
-@Composable
-private fun AcademicYearsScreen(userProfile: UserProfile, onNavigateBack: () -> Unit) {
-    BoxWithContent("Academic Years", userProfile.roleId)
-}
-
-@Composable
-private fun TermsScreen(userProfile: UserProfile, onNavigateBack: () -> Unit) {
-    BoxWithContent("Terms", userProfile.roleId)
-}
-
-@Composable
-private fun ExamsScreen(userProfile: UserProfile, onNavigateBack: () -> Unit) {
-    BoxWithContent("Exams", userProfile.roleId)
-}
-
-@Composable
-private fun SubjectsScreen(userProfile: UserProfile, onNavigateBack: () -> Unit) {
-    BoxWithContent("Subjects", userProfile.roleId)
-}
-
-@Composable
-private fun ClassesScreen(userProfile: UserProfile, onNavigateBack: () -> Unit) {
-    BoxWithContent("Classes", userProfile.roleId)
-}
-
-@Composable
-private fun FeesScreen(userProfile: UserProfile, onNavigateBack: () -> Unit) {
-    BoxWithContent("Fees Management", userProfile.roleId)
-}
-
-@Composable
-private fun PaymentsScreen(userProfile: UserProfile, onNavigateBack: () -> Unit) {
-    BoxWithContent("Payments", userProfile.roleId)
-}
-
-@Composable
-private fun ReceiptsScreen(userProfile: UserProfile, onNavigateBack: () -> Unit) {
-    BoxWithContent("Receipts", userProfile.roleId)
-}
-
-@Composable
-private fun GradingSystemScreen(userProfile: UserProfile, onNavigateBack: () -> Unit) {
-    BoxWithContent("Grading System", userProfile.roleId)
-}
-
-@Composable
-private fun ClassTeachersScreen(userProfile: UserProfile, onNavigateBack: () -> Unit) {
-    BoxWithContent("Class Teachers", userProfile.roleId)
-}
-
-@Composable
-private fun TeacherAssignmentsScreen(userProfile: UserProfile, onNavigateBack: () -> Unit) {
-    BoxWithContent("Teacher Assignments", userProfile.roleId)
-}
-
-@Composable
-private fun StudentPromotionScreen(userProfile: UserProfile, onNavigateBack: () -> Unit) {
-    BoxWithContent("Student Promotion", userProfile.roleId)
-}
-
 @Composable
 private fun BoxWithContent(title: String, roleId: Int) {
     Box(
