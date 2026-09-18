@@ -37,8 +37,11 @@ fun MainApp(
                 contentColor = getRoleColor(userProfile.roleId)
             ) {
                 navItems.forEach { item ->
+                    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+                    val isSelected = currentRoute == item.screen.route
+                    
                     NavigationRailItem(
-                        selected = false,
+                        selected = isSelected,
                         onClick = {
                             navController.navigate(item.screen.route) {
                                 popUpTo(navController.graph.startDestinationId) {
@@ -131,7 +134,16 @@ fun MainApp(
             composable(Screen.Dashboard.route) {
                 DashboardScreen(
                     userProfile = userProfile,
-                    onLogout = onLogout
+                    onLogout = onLogout,
+                    onNavigateToScreen = { route ->
+                        navController.navigate(route) {
+                            popUpTo(Screen.Dashboard.route) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
                 )
             }
             

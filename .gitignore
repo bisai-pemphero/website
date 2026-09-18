@@ -1,56 +1,33 @@
 ```
-# Build artifacts
-bin/
-obj/
-*.dll
-*.exe
-*.pdb
-*.so
-*.dylib
+# Kotlin/Android build artifacts
+*.class
 *.jar
 *.war
-*.class
+*.aar
+*.apk
+*.dex
 
-# Dependencies
-packages/
-node_modules/
-venv/
-.venv/
-__pycache__/
-*.egg-info/
-
-# Android build outputs
-mySchoolAndroid/app/build/
-mySchoolAndroid/.gradle/
-mySchoolAndroid/build/
+# Build directories
+build/
+.gradle/
+*/build/
+*/.gradle/
 
 # IDE files
-.vscode/
 .idea/
-*.swp
-*.swo
+*.iml
+*.ipr
+*.iws
+.vscode/
+
+# Temp files
 *.tmp
+*.swp
+*~
 
 # Logs
 *.log
 
-# Environment
-.env
-.env.local
-*.env.*
-
-# OS generated files
-.DS_Store
-Thumbs.db
-
-# Coverage reports
-coverage/
-htmlcov/
-*.coverage
-
-# Distribution / packaging
-dist/
-build/
-*.tar.gz
-*.zip
+# Local configuration
+local.properties
 ```

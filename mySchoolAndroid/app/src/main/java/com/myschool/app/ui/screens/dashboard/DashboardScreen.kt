@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.myschool.app.domain.model.UserProfile
+import com.myschool.app.navigation.Screen
 import com.myschool.app.ui.components.StatCard
 import com.myschool.app.ui.theme.*
 
@@ -20,6 +21,7 @@ import com.myschool.app.ui.theme.*
 fun DashboardScreen(
     userProfile: UserProfile,
     onLogout: () -> Unit,
+    onNavigateToScreen: (String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
@@ -35,6 +37,12 @@ fun DashboardScreen(
                     )
                 },
                 actions = {
+                    IconButton(onClick = { /* Refresh */ viewModel.refresh() }) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Refresh"
+                        )
+                    }
                     IconButton(onClick = onLogout) {
                         Icon(
                             imageVector = Icons.Default.ExitToApp,
@@ -43,7 +51,7 @@ fun DashboardScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
+                    containerColor = getRoleColor(userProfile.roleId),
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
@@ -188,13 +196,61 @@ fun DashboardScreen(
                                 }
                             )
                         }
+                        if (state.stats.activeAcademicYear != null) {
+                            item {
+                                Card(
+                                    modifier = Modifier
+                                        .aspectRatio(1.5f)
+                                        .fillMaxWidth(),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                                    shape = MaterialTheme.shapes.medium,
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                    )
+                                ) {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .padding(16.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.CalendarMonth,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(32.dp),
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            text = "Academic Year",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Text(
+                                            text = state.stats.activeAcademicYear ?: "N/A",
+                                            style = MaterialTheme.typography.titleSmall,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
                 is DashboardUiState.Error -> {
-                    Text(
-                        text = "Error loading stats: ${state.message}",
-                        color = MaterialTheme.colorScheme.error
-                    )
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer
+                        )
+                    ) {
+                        Text(
+                            text = "Error loading stats: ${state.message}",
+                            modifier = Modifier.padding(16.dp),
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    }
                 }
                 else -> {}
             }
@@ -206,11 +262,11 @@ fun DashboardScreen(
             )
             
             LazyVerticalGrid(
-                columns = GridCells.Adaptive(minSize = 150.dp),
+                columns = GridCells.Adaptive(minSize = 140.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                getQuickActionsForRole(userProfile.roleId).forEach { action ->
+                getQuickActionsForRole(userProfile.roleId, onNavigateToScreen).forEach { action ->
                     item {
                         ActionCard(
                             title = action.title,
@@ -288,41 +344,41 @@ private fun getRoleName(roleId: Int): String {
     }
 }
 
-private fun getQuickActionsForRole(roleId: Int): List<QuickAction> {
+private fun getQuickActionsForRole(roleId: Int, onNavigateToScreen: (String) -> Unit): List<QuickAction> {
     return when (roleId) {
         1 -> listOf(
-            QuickAction("Schools", Icons.Default.Business, SystemAdminColor) {},
-            QuickAction("Users", Icons.Default.People, SystemAdminColor) {},
-            QuickAction("Reports", Icons.Default.Assessment, SystemAdminColor) {},
-            QuickAction("Settings", Icons.Default.Settings, SystemAdminColor) {}
+            QuickAction("Schools", Icons.Default.Business, SystemAdminColor) { onNavigateToScreen(Screen.Schools.route) },
+            QuickAction("Users", Icons.Default.People, SystemAdminColor) { onNavigateToScreen(Screen.AllUsers.route) },
+            QuickAction("Reports", Icons.Default.Assessment, SystemAdminColor) { onNavigateToScreen(Screen.Reports.route) },
+            QuickAction("Settings", Icons.Default.Settings, SystemAdminColor) { onNavigateToScreen(Screen.Settings.route) }
         )
         2 -> listOf(
-            QuickAction("Staff", Icons.Default.People, DirectorColor) {},
-            QuickAction("Students", Icons.Default.School, DirectorColor) {},
-            QuickAction("Reports", Icons.Default.Assessment, DirectorColor) {},
-            QuickAction("Fee Structure", Icons.Default.AttachMoney, DirectorColor) {}
+            QuickAction("Staff", Icons.Default.People, DirectorColor) { onNavigateToScreen(Screen.Staff.route) },
+            QuickAction("Students", Icons.Default.School, DirectorColor) { onNavigateToScreen(Screen.Students.route) },
+            QuickAction("Reports", Icons.Default.Assessment, DirectorColor) { onNavigateToScreen(Screen.Reports.route) },
+            QuickAction("Fee Structure", Icons.Default.AttachMoney, DirectorColor) { onNavigateToScreen(Screen.FeeStructure.route) }
         )
         3 -> listOf(
-            QuickAction("Students", Icons.Default.School, HeadmasterColor) {},
-            QuickAction("Academic", Icons.Default.CalendarMonth, HeadmasterColor) {},
-            QuickAction("Exams", Icons.Default.Edit, HeadmasterColor) {},
-            QuickAction("Classes", Icons.Default.Class_, HeadmasterColor) {},
-            QuickAction("Teachers", Icons.Default.People, HeadmasterColor) {},
-            QuickAction("Grading", Icons.Default.Star, HeadmasterColor) {}
+            QuickAction("Students", Icons.Default.School, HeadmasterColor) { onNavigateToScreen(Screen.Students.route) },
+            QuickAction("Academic", Icons.Default.CalendarMonth, HeadmasterColor) { onNavigateToScreen(Screen.AcademicYears.route) },
+            QuickAction("Exams", Icons.Default.Edit, HeadmasterColor) { onNavigateToScreen(Screen.Exams.route) },
+            QuickAction("Classes", Icons.Default.Class_, HeadmasterColor) { onNavigateToScreen(Screen.Classes.route) },
+            QuickAction("Teachers", Icons.Default.People, HeadmasterColor) { onNavigateToScreen(Screen.TeacherAssignments.route) },
+            QuickAction("Grading", Icons.Default.Star, HeadmasterColor) { onNavigateToScreen(Screen.GradingSystem.route) }
         )
         4 -> listOf(
-            QuickAction("Students", Icons.Default.School, BursarColor) {},
-            QuickAction("Fees", Icons.Default.AttachMoney, BursarColor) {},
-            QuickAction("Payments", Icons.Default.Payment, BursarColor) {},
-            QuickAction("Receipts", Icons.Default.Receipt, BursarColor) {},
-            QuickAction("Reports", Icons.Default.Assessment, BursarColor) {}
+            QuickAction("Students", Icons.Default.School, BursarColor) { onNavigateToScreen(Screen.Students.route) },
+            QuickAction("Fees", Icons.Default.AttachMoney, BursarColor) { onNavigateToScreen(Screen.Fees.route) },
+            QuickAction("Payments", Icons.Default.Payment, BursarColor) { onNavigateToScreen(Screen.Payments.route) },
+            QuickAction("Receipts", Icons.Default.Receipt, BursarColor) { onNavigateToScreen(Screen.Receipts.route) },
+            QuickAction("Reports", Icons.Default.Assessment, BursarColor) { onNavigateToScreen(Screen.FeeCollectionReport.route) }
         )
         5 -> listOf(
-            QuickAction("My Classes", Icons.Default.Class_, TeacherColor) {},
-            QuickAction("Subjects", Icons.Default.Book, TeacherColor) {},
-            QuickAction("Students", Icons.Default.School, TeacherColor) {},
-            QuickAction("Exams", Icons.Default.Edit, TeacherColor) {},
-            QuickAction("Results", Icons.Default.Star, TeacherColor) {}
+            QuickAction("My Classes", Icons.Default.Class_, TeacherColor) { onNavigateToScreen(Screen.MyClasses.route) },
+            QuickAction("Subjects", Icons.Default.Book, TeacherColor) { onNavigateToScreen(Screen.MySubjects.route) },
+            QuickAction("Students", Icons.Default.School, TeacherColor) { onNavigateToScreen(Screen.Students.route) },
+            QuickAction("Exams", Icons.Default.Edit, TeacherColor) { onNavigateToScreen(Screen.Exams.route) },
+            QuickAction("Results", Icons.Default.Star, TeacherColor) { onNavigateToScreen(Screen.ViewResults.route) }
         )
         else -> emptyList()
     }
