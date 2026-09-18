@@ -1,18 +1,1 @@
-```
-# Gradle
-.gradle/
-build/
-!gradle.properties
-!gradlew
-!gradlew.bat
-
-# Android
-*.apk
-*.aar
-*.ap_
-local.properties
-captures/
-.externalNativeBuild
-.intermediates
-.profile
-```
+Nothing should be ignored since the changes only include source code files (.kt files) and no build artifacts, dependencies, or temporary files.

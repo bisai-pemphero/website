@@ -17,6 +17,8 @@ import com.myschool.app.domain.model.UserProfile
 import com.myschool.app.navigation.NavigationGraph
 import com.myschool.app.navigation.Screen
 import com.myschool.app.ui.screens.dashboard.DashboardScreen
+import com.myschool.app.ui.screens.students.StudentsListScreen
+import com.myschools.app.ui.academic.AcademicYearsScreen
 import com.myschool.app.ui.theme.*
 
 @Composable
@@ -156,11 +158,15 @@ fun MainApp(
                 )
             }
             
-            // Placeholder screens - to be implemented with full functionality
+            // Academic Years screen - fully implemented
             composable(Screen.AcademicYears.route) {
-                BoxWithContent("Academic Years", userProfile.roleId)
+                AcademicYearsScreen(
+                    schoolId = userProfile.schoolId,
+                    onNavigateBack = { navController.popBackStack() }
+                )
             }
             
+            // Placeholder screens - to be implemented with full functionality
             composable(Screen.Terms.route) {
                 BoxWithContent("Terms", userProfile.roleId)
             }
